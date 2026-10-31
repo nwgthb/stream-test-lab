@@ -1,0 +1,314 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #020617;
+    color: #f8fafc;
+    padding: 1.5rem;
+}
+
+.app-container-fluid {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+header h1 {
+    color: #38bdf8;
+    font-size: 2.2rem;
+    margin-bottom: 0.25rem;
+}
+
+header p {
+    color: #64748b;
+}
+
+/* Workbench Matrix Responsive Split Configuration */
+.workbench-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.matrix-cell {
+    background-color: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.cell-banner {
+    background-color: #1e293b;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #38bdf8;
+    margin-bottom: 1rem;
+    border-left: 4px solid #38bdf8;
+}
+
+.player-section {
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 1rem;
+    border: 1px solid #334155;
+    position: relative;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* --- DYNAMIC CSS COMPRESSION DIFFERENCE OVERLAY SYSTEM --- */
+.workbench-grid.overlay-active {
+    grid-template-columns: 1fr !important;
+    max-width: 900px;
+    margin: 0 auto 1.5rem auto;
+}
+
+.workbench-grid.overlay-active #cellB {
+    display: none; /* Hide standard Cell B wrapper layout */
+}
+
+/* Injecting video B inside Player A structure framework programmatically */
+.player-section .embedded-overlay-player {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Let hardware inputs pass straight down onto player A controls */
+    mix-blend-mode: difference;
+    opacity: 0.95;
+    z-index: 10;
+}
+
+/* Dual Column Metrics Panels Styles */
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    padding: 0.5rem;
+    border-radius: 6px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #34d399;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* Control Element Input Row Grids Grid */
+.cell-controls {
+    background-color: #1e293b;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 0.6rem;
+    border-radius: 4px;
+    border: 1px solid #475569;
+    background-color: #020617;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+button {
+    padding: 0.6rem 1.2rem;
+    background-color: #0284c7;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0369a1;
+}
+
+.control-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.action-btn-sm {
+    background-color: #475569;
+}
+.action-btn-sm:hover {
+    background-color: #334155;
+}
+
+.select-btn-sm {
+    padding: 0.6rem;
+    background-color: #020617;
+    color: #fff;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.utility-btn-full {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #10b981;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+    margin-top: 0.25rem;
+}
+.utility-btn-full:hover {
+    background-color: #059669;
+}
+
+/* Global Control Strip styling expansions */
+.global-control-strip {
+    background-color: #0f172a;
+    border: 1px solid #1e293b;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.preset-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    background-color: #334155;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+}
+.preset-btn:hover {
+    background-color: #475569;
+}
+
+.master-sync-btn {
+    background-color: #0284c7;
+}
+.master-sync-btn:hover {
+    background-color: #0369a1;
+}
+
+.master-latency-btn {
+    background-color: #d97706;
+}
+.master-latency-btn:hover {
+    background-color: #b45309;
+}
+
+.master-overlay-btn {
+    background-color: #ec4899; /* Deep Pink */
+}
+.master-overlay-btn:hover {
+    background-color: #db2777;
+}
+
+.workbench-grid.overlay-active ~ .global-control-strip #toggleOverlayBtn {
+    background-color: #ef4444; /* Flips red when overlay runs active */
+}
+
+/* Console Logger Dashboard Screen */
+.console-section {
+    background-color: #000;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.console-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 0.5rem;
+}
+
+.console-header h3 {
+    font-size: 0.95rem;
+    color: #94a3b8;
+}
+
+#clearConsoleBtn {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    background-color: #1e293b;
+}
+
+.console-terminal {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8rem;
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.25rem;
+}
+
+.log-entry {
+    padding: 0.1rem 0.3rem;
+    border-radius: 2px;
+}
+.log-entry.system { color: #38bdf8; }
+.log-entry.action { color: #a78bfa; }
+.log-entry.state { color: #34d399; }
+.log-entry.warn { color: #fbbf24; }
+.log-entry.error { color: #f87171; }
