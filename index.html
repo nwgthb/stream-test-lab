@@ -12,14 +12,14 @@
 
     <div class="app-container-fluid">
         <header>
-            <h1>Stream Test Lab Pro - Dual Matrix Mode</h1>
-            <p>Inject, analyze, and compare two live streaming feeds or progressive video assets simultaneously.</p>
+            <h1>Stream Test Lab Pro - Matrix Offline Mode</h1>
+            <p>Inject, compare, and cache streaming feeds or offline local assets simultaneously with PiP diagnostics.</p>
         </header>
 
         <!-- Main Comparative Matrix Workbench Workspace Grid Layout -->
         <main class="workbench-grid" id="workbenchGrid">
             
-            <!-- ====== MONITOR CELL A MATRIX CONFIGURATION ====== -->
+            <!-- ====== MONITOR CELL A CONFIGURATION ====== -->
             <div class="matrix-cell" id="cellA">
                 <div class="cell-banner">Player A (Pipeline Core Alpha)</div>
                 <div class="player-section" id="playerContainerA">
@@ -43,11 +43,17 @@
                         <button class="action-btn-sm" id="playPauseBtnA">Play/Pause A</button>
                         <select id="qualitySelectA" class="select-btn-sm"><option value="-1">Auto Quality</option></select>
                     </div>
-                    <button class="utility-btn-full" id="snapshotBtnA">Capture Frame Snapshot A</button>
+                    <!-- PiP and Snapshot Controls Alpha -->
+                    <div class="control-row-grid">
+                        <button class="utility-btn-full" id="snapshotBtnA">Snapshot A</button>
+                        <button class="pip-btn" id="pipBtnA">Toggle PiP A</button>
+                    </div>
+                    <!-- Offline Dropzone Core Alpha -->
+                    <div class="offline-dropzone" id="dropzoneA">Drag & Drop Local MP4 to Cache Offline A</div>
                 </div>
             </div>
 
-            <!-- ====== MONITOR CELL B MATRIX CONFIGURATION ====== -->
+            <!-- ====== MONITOR CELL B CONFIGURATION ====== -->
             <div class="matrix-cell" id="cellB">
                 <div class="cell-banner">Player B (Pipeline Core Beta)</div>
                 <div class="player-section">
@@ -71,7 +77,13 @@
                         <button class="action-btn-sm" id="playPauseBtnB">Play/Pause B</button>
                         <select id="qualitySelectB" class="select-btn-sm"><option value="-1">Auto Quality</option></select>
                     </div>
-                    <button class="utility-btn-full" id="snapshotBtnB">Capture Frame Snapshot B</button>
+                    <!-- PiP and Snapshot Controls Beta -->
+                    <div class="control-row-grid">
+                        <button class="utility-btn-full" id="snapshotBtnB">Snapshot B</button>
+                        <button class="pip-btn" id="pipBtnB">Toggle PiP B</button>
+                    </div>
+                    <!-- Offline Dropzone Core Beta -->
+                    <div class="offline-dropzone" id="dropzoneB">Drag & Drop Local MP4 to Cache Offline B</div>
                 </div>
             </div>
 
@@ -85,8 +97,11 @@
                 <button class="preset-btn" data-target="both-mp4">Load Both MP4</button>
                 <button class="preset-btn master-sync-btn" id="masterPlayPauseBtn">Master Play/Pause Sync</button>
                 <button class="preset-btn master-latency-btn" id="masterLatencySyncBtn">Force-Sync Video Clocks (B ➔ A)</button>
-                <!-- New Overlay Mode Trigger Button -->
                 <button class="preset-btn master-overlay-btn" id="toggleOverlayBtn">Toggle Visual Matrix Difference Overlay</button>
+            </div>
+            <!-- Cached Inventory Overview Status -->
+            <div class="cached-inventory-status" id="cacheStatusPanel">
+                Offline Cache Status: Checking storage clusters...
             </div>
         </section>
 
@@ -100,9 +115,10 @@
         </section>
     </div>
 
-    <!-- Linked scripts split to prevent files from overflowing -->
+    <!-- Scripts split cleanly to stop file overflows -->
     <script src="telemetry.js"></script>
     <script src="utilities.js"></script>
+    <script src="offline.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
