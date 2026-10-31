@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Test Lab Pro - Dual Matrix Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include HLS.js streaming engine library -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+
+    <div class="app-container-fluid">
+        <header>
+            <h1>Stream Test Lab Pro - Dual Matrix Mode</h1>
+            <p>Inject, analyze, and compare two live streaming feeds or progressive video assets simultaneously.</p>
+        </header>
+
+        <!-- Main Comparative Matrix Workbench Workspace Grid Layout -->
+        <main class="workbench-grid" id="workbenchGrid">
+            
+            <!-- ====== MONITOR CELL A MATRIX CONFIGURATION ====== -->
+            <div class="matrix-cell" id="cellA">
+                <div class="cell-banner">Player A (Pipeline Core Alpha)</div>
+                <div class="player-section" id="playerContainerA">
+                    <video id="videoPlayerA" controls autoplay muted crossorigin="anonymous">Your browser does not support HTML5 video.</video>
+                </div>
+                
+                <!-- Telemetry Metrics Display Layer Alpha -->
+                <section class="stats-panel">
+                    <div class="stat-card"><span class="stat-label">Buffer A</span><span id="statBufferA" class="stat-value">0.00s</span></div>
+                    <div class="stat-card"><span class="stat-label">Dropped A</span><span id="statDroppedA" class="stat-value">0</span></div>
+                    <div class="stat-card"><span class="stat-label">FPS A</span><span id="statFpsA" class="stat-value">0 FPS</span></div>
+                </section>
+
+                <!-- Input Rail Pipeline Target Controls Alpha -->
+                <div class="cell-controls">
+                    <div class="input-group">
+                        <input type="text" id="streamUrlA" placeholder="Paste .mp4 or .m3u8 link for Player A..." value="https://mux.dev">
+                        <button id="loadBtnA">Load Player A</button>
+                    </div>
+                    <div class="control-row-grid">
+                        <button class="action-btn-sm" id="playPauseBtnA">Play/Pause A</button>
+                        <select id="qualitySelectA" class="select-btn-sm"><option value="-1">Auto Quality</option></select>
+                    </div>
+                    <button class="utility-btn-full" id="snapshotBtnA">Capture Frame Snapshot A</button>
+                </div>
+            </div>
+
+            <!-- ====== MONITOR CELL B MATRIX CONFIGURATION ====== -->
+            <div class="matrix-cell" id="cellB">
+                <div class="cell-banner">Player B (Pipeline Core Beta)</div>
+                <div class="player-section">
+                    <video id="videoPlayerB" controls autoplay muted crossorigin="anonymous">Your browser does not support HTML5 video.</video>
+                </div>
+                
+                <!-- Telemetry Metrics Display Layer Beta -->
+                <section class="stats-panel">
+                    <div class="stat-card"><span class="stat-label">Buffer B</span><span id="statBufferB" class="stat-value">0.00s</span></div>
+                    <div class="stat-card"><span class="stat-label">Dropped B</span><span id="statDroppedB" class="stat-value">0</span></div>
+                    <div class="stat-card"><span class="stat-label">FPS B</span><span id="statFpsB" class="stat-value">0 FPS</span></div>
+                </section>
+
+                <!-- Input Rail Pipeline Target Controls Beta -->
+                <div class="cell-controls">
+                    <div class="input-group">
+                        <input type="text" id="streamUrlB" placeholder="Paste .mp4 or .m3u8 link for Player B..." value="https://mux.dev">
+                        <button id="loadBtnB">Load Player B</button>
+                    </div>
+                    <div class="control-row-grid">
+                        <button class="action-btn-sm" id="playPauseBtnB">Play/Pause B</button>
+                        <select id="qualitySelectB" class="select-btn-sm"><option value="-1">Auto Quality</option></select>
+                    </div>
+                    <button class="utility-btn-full" id="snapshotBtnB">Capture Frame Snapshot B</button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Global Master Control Strip Module -->
+        <section class="global-control-strip">
+            <div class="preset-section">
+                <strong>Global Orchestration Layout:</strong>
+                <button class="preset-btn" data-target="both-hls">Load Both HLS</button>
+                <button class="preset-btn" data-target="both-mp4">Load Both MP4</button>
+                <button class="preset-btn master-sync-btn" id="masterPlayPauseBtn">Master Play/Pause Sync</button>
+                <button class="preset-btn master-latency-btn" id="masterLatencySyncBtn">Force-Sync Video Clocks (B ➔ A)</button>
+                <!-- New Overlay Mode Trigger Button -->
+                <button class="preset-btn master-overlay-btn" id="toggleOverlayBtn">Toggle Visual Matrix Difference Overlay</button>
+            </div>
+        </section>
+
+        <!-- Dynamic Event Timeline Log Console Terminal Window Frame -->
+        <section class="console-section">
+            <div class="console-header">
+                <h3>Comparative Analysis & Diagnostics Terminal</h3>
+                <button id="clearConsoleBtn">Clear Terminal</button>
+            </div>
+            <div id="consoleTerminal" class="console-terminal"></div>
+        </section>
+    </div>
+
+    <!-- Linked scripts split to prevent files from overflowing -->
+    <script src="telemetry.js"></script>
+    <script src="utilities.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
