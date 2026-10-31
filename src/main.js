@@ -2,15 +2,17 @@ import { writeToConsole, updateChannelTelemetry } from './telemetry.js';
 import { captureVideoFrame } from './utilities.js';
 import { initOfflineDatabase, saveVideoToOfflineCache, loadOfflineCachedVideo } from './offline.js';
 
-const clearConsoleBtn = document.getElementById('clearConsoleBtn');
-const masterPlayPauseBtn = document.getElementById('masterPlayPauseBtn');
-const masterLatencySyncBtn = document.getElementById('masterLatencySyncBtn');
-const toggleOverlayBtn = document.getElementById('toggleOverlayBtn');
-const workbenchGrid = document.getElementById('workbenchGrid');
-const playerContainerA = document.getElementById('playerContainerA');
-const globalPresetBtns = document.querySelectorAll('.preset-btn:not(.master-sync-btn):not(.master-latency-btn):not(.master-overlay-btn)');
+const ui = {
+  clearConsoleBtn: document.getElementById('clearConsoleBtn'),
+  masterPlayPauseBtn: document.getElementById('masterPlayPauseBtn'),
+  masterLatencySyncBtn: document.getElementById('masterLatencySyncBtn'),
+  toggleOverlayBtn: document.getElementById('toggleOverlayBtn'),
+  workbenchGrid: document.getElementById('workbenchGrid'),
+  playerContainerA: document.getElementById('playerContainerA'),
+  globalPresetBtns: document.querySelectorAll('.preset-btn:not(.master-sync-btn):not(.master-latency-btn):not(.master-overlay-btn)')
+};
 
-const players = {
+const playerRefs = {
   A: {
     video: document.getElementById('videoPlayerA'),
     urlInput: document.getElementById('streamUrlA'),
@@ -22,10 +24,7 @@ const players = {
     dropzone: document.getElementById('dropzoneA'),
     statBuffer: document.getElementById('statBufferA'),
     statDropped: document.getElementById('statDroppedA'),
-    statFps: document.getElementById('statFpsA'),
-    hlsInstance: null,
-    lastDecodedFrames: 0,
-    lastTime: performance.now(),
+    statFps: document.getElementById('statFpsA')
   },
   B: {
     video: document.getElementById('videoPlayerB'),
@@ -38,14 +37,61 @@ const players = {
     dropzone: document.getElementById('dropzoneB'),
     statBuffer: document.getElementById('statBufferB'),
     statDropped: document.getElementById('statDroppedB'),
-    statFps: document.getElementById('statFpsB'),
-    hlsInstance: null,
-    lastDecodedFrames: 0,
-    lastTime: performance.now(),
-  },
+    statFps: document.getElementById('statFpsB')
+  }
 };
 
-let isOverlayModeActive = false;
+const state = {
+  overlayActive: false,
+  players: {
+    A: {
+      url: 'https://mux.dev',
+      hlsInstance: null,
+      lastDecodedFrames: 0,
+      lastTime: performance.now(),
+      playing: false,
+      sourceType: 'hls'
+    },
+    B: {
+      url: 'https://mux.dev',
+      hlsInstance: null,
+      lastDecodedFrames: 0,
+      lastTime: performance.now(),
+      playing: false,
+      sourceType: 'hls'
+    }
+  }
+};
+
+function applyPlayerState(key, patch) {
+  Object.assign(state.players[key], patch);
+}
+
+function setPlayerUrl(key, value) {
+  const nextUrl = value.trim();
+  state.players[key].url = nextUrl;
+  playerRefs[key].urlInput.value = nextUrl;
+}
+
+function renderOverlayView() {
+  const { overlayActive } = state;
+  ui.workbenchGrid.classList.toggle('overlay-active', overlayActive);
+  playerRefs.B.video.classList.toggle('embedded-overlay-player', overlayActive);
+  ui.toggleOverlayBtn.textContent = overlayActive
+    ? 'Exit Visual Difference Overlay Mode'
+    : 'Toggle Visual Matrix Difference Overlay';
+}
+
+function syncPlayerVideoLocation(key) {
+  const player = playerRefs[key];
+  const container = key === 'A' ? ui.playerContainerA : document.querySelector('#cellB .player-section');
+
+  if (state.overlayActive && key === 'B') {
+    ui.playerContainerA.appendChild(player.video);
+  } else {
+    document.querySelector('#cellB .player-section').appendChild(player.video);
+  }
+}
 
 window.writeToConsole = writeToConsole;
 window.updateChannelTelemetry = updateChannelTelemetry;
@@ -61,101 +107,114 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-clearConsoleBtn.addEventListener('click', () => {
+ui.clearConsoleBtn.addEventListener('click', () => {
   document.getElementById('consoleTerminal').innerHTML = '';
   writeToConsole('Terminal workspace logs reset.', 'system');
 });
 
 function deployStreamRoute(key) {
-  const p = players[key];
-  const targetUrl = p.urlInput.value.trim();
-  p.qualitySelect.innerHTML = '<option value="-1">Auto Quality</option>';
+  const player = playerRefs[key];
+  const appPlayer = state.players[key];
+  const targetUrl = appPlayer.url;
+
+  player.qualitySelect.innerHTML = '<option value="-1">Auto Quality</option>';
 
   if (!targetUrl) {
     writeToConsole(`Pipeline ${key} Cancelled: Target input path string is empty.`, 'error');
     return;
   }
 
-  if (p.hlsInstance) {
+  if (appPlayer.hlsInstance) {
     writeToConsole(`Tearing down active HLS processor instance inside Core ${key}...`, 'system');
-    p.hlsInstance.destroy();
-    p.hlsInstance = null;
+    appPlayer.hlsInstance.destroy();
+    appPlayer.hlsInstance = null;
   }
 
   if (targetUrl.includes('.m3u8')) {
     if (window.Hls && window.Hls.isSupported()) {
       writeToConsole(`Deploying Hls.js extension engine pipeline down Channel ${key}...`, 'system');
-      p.hlsInstance = new window.Hls();
-      p.hlsInstance.loadSource(targetUrl);
-      p.hlsInstance.attachMedia(p.video);
+      appPlayer.hlsInstance = new window.Hls();
+      appPlayer.hlsInstance.loadSource(targetUrl);
+      appPlayer.hlsInstance.attachMedia(player.video);
+      appPlayer.sourceType = 'hls';
 
-      p.hlsInstance.on(window.Hls.Events.MANIFEST_PARSED, (_event, data) => {
+      appPlayer.hlsInstance.on(window.Hls.Events.MANIFEST_PARSED, (_event, data) => {
         writeToConsole(`Core ${key}: Adaptive tracks successfully initialized: ${data.levels.length}`, 'state');
         data.levels.forEach((level, index) => {
           const option = document.createElement('option');
           option.value = index;
           option.textContent = level.name || `${level.height}p (${Math.round(level.bitrate / 1000)}kbps)`;
-          p.qualitySelect.appendChild(option);
+          player.qualitySelect.appendChild(option);
         });
-        p.video.play().catch((e) => writeToConsole(`Core ${key} Playback notice: ${e.message}`, 'warn'));
+        player.video.play().catch((event) => writeToConsole(`Core ${key} Playback notice: ${event.message}`, 'warn'));
       });
 
-      p.hlsInstance.on(window.Hls.Events.ERROR, (_event, data) => {
+      appPlayer.hlsInstance.on(window.Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
           writeToConsole(`Core ${key} Critical Stream Exception: ${data.details}`, 'error');
         }
       });
-    } else if (p.video.canPlayType('application/vnd.apple.mpegurl')) {
+    } else if (player.video.canPlayType('application/vnd.apple.mpegurl')) {
       writeToConsole(`Core ${key}: Routing using browser native HLS handler framework.`, 'system');
-      p.video.src = targetUrl;
+      player.video.src = targetUrl;
+      appPlayer.sourceType = 'hls';
     } else {
       writeToConsole(`Fatal Error: HLS unsupported on channel ${key}`, 'error');
     }
   } else {
     writeToConsole(`Core ${key}: Binding native HTML5 progressive frame decoder path...`, 'system');
-    p.video.src = targetUrl;
-    p.video.load();
-    p.video.play().catch((e) => writeToConsole(`Core ${key} Playback note: ${e.message}`, 'warn'));
+    player.video.src = targetUrl;
+    player.video.load();
+    appPlayer.sourceType = 'mp4';
+    player.video.play().catch((event) => writeToConsole(`Core ${key} Playback note: ${event.message}`, 'warn'));
   }
 }
 
 ['A', 'B'].forEach((key) => {
-  const p = players[key];
+  const player = playerRefs[key];
+  const appPlayer = state.players[key];
 
-  p.loadBtn.addEventListener('click', () => deployStreamRoute(key));
+  player.urlInput.value = appPlayer.url;
 
-  p.playPauseBtn.addEventListener('click', () => {
-    if (p.video.paused) {
-      p.video.play();
+  player.loadBtn.addEventListener('click', () => {
+    setPlayerUrl(key, player.urlInput.value);
+    deployStreamRoute(key);
+  });
+
+  player.playPauseBtn.addEventListener('click', () => {
+    if (player.video.paused) {
+      player.video.play();
+      applyPlayerState(key, { playing: true });
       writeToConsole(`Manual Action: Resumed window viewport ${key}.`, 'action');
     } else {
-      p.video.pause();
+      player.video.pause();
+      applyPlayerState(key, { playing: false });
       writeToConsole(`Manual Action: Suspended window viewport ${key}.`, 'action');
     }
   });
 
-  p.qualitySelect.addEventListener('change', (e) => {
-    const selectedIdx = parseInt(e.target.value, 10);
-    if (p.hlsInstance) {
-      p.hlsInstance.currentLevel = selectedIdx;
+  player.qualitySelect.addEventListener('change', (event) => {
+    const selectedIdx = parseInt(event.target.value, 10);
+    if (appPlayer.hlsInstance) {
+      appPlayer.hlsInstance.currentLevel = selectedIdx;
       writeToConsole(`Core ${key}: Track variant execution shifted ➔ Track Option Index: ${selectedIdx}`, 'action');
     }
   });
 
-  p.snapshotBtn.addEventListener('click', () => captureVideoFrame(key, p.video));
+  player.snapshotBtn.addEventListener('click', () => captureVideoFrame(key, player.video));
 
-  p.pipBtn.addEventListener('click', async () => {
+  player.pipBtn.addEventListener('click', async () => {
     if (!document.pictureInPictureEnabled) {
       writeToConsole('Picture-in-Picture mode is unsupported inside your browser environment configurations.', 'error');
       return;
     }
 
     try {
-      if (document.pictureInPictureElement === p.video) {
+      if (document.pictureInPictureElement === player.video) {
         await document.exitPictureInPicture();
         writeToConsole(`PiP Core Intercept: Deactivated detached canvas window ${key}.`, 'system');
       } else {
-        await p.video.requestPictureInPicture();
+        await player.video.requestPictureInPicture();
         writeToConsole(`PiP Core Intercept: Spawned detached floating frame layer for Player ${key}.`, 'state');
       }
     } catch (pipError) {
@@ -163,17 +222,18 @@ function deployStreamRoute(key) {
     }
   });
 
-  p.dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    p.dropzone.classList.add('drag-over');
+  player.dropzone.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    player.dropzone.classList.add('drag-over');
   });
-  p.dropzone.addEventListener('dragleave', () => p.dropzone.classList.remove('drag-over'));
 
-  p.dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    p.dropzone.classList.remove('drag-over');
+  player.dropzone.addEventListener('dragleave', () => player.dropzone.classList.remove('drag-over'));
 
-    const files = e.dataTransfer.files;
+  player.dropzone.addEventListener('drop', (event) => {
+    event.preventDefault();
+    player.dropzone.classList.remove('drag-over');
+
+    const files = event.dataTransfer.files;
     if (files.length > 0 && files[0].type.includes('video/mp4')) {
       writeToConsole(`Ingress storage upload detected on channel ${key}. Committing blob asset onto disk database...`, 'action');
       saveVideoToOfflineCache(key, files[0]);
@@ -182,59 +242,60 @@ function deployStreamRoute(key) {
     }
   });
 
-  p.dropzone.addEventListener('click', () => {
+  player.dropzone.addEventListener('click', () => {
     writeToConsole(`Storage Call: Querying binary cache indexes down partition pipeline ${key}...`, 'action');
-    loadOfflineCachedVideo(key, p.video);
+    loadOfflineCachedVideo(key, player.video);
   });
 
-  p.video.addEventListener('waiting', () => writeToConsole(`Core ${key}: Buffering network resources...`, 'warn'));
-  p.video.addEventListener('playing', () => writeToConsole(`Core ${key}: Rendering running frames.`, 'state'));
+  player.video.addEventListener('waiting', () => writeToConsole(`Core ${key}: Buffering network resources...`, 'warn'));
+  player.video.addEventListener('playing', () => {
+    applyPlayerState(key, { playing: true });
+    writeToConsole(`Core ${key}: Rendering running frames.`, 'state');
+  });
+
+  player.video.addEventListener('pause', () => {
+    applyPlayerState(key, { playing: false });
+  });
 });
 
-masterPlayPauseBtn.addEventListener('click', () => {
-  const targetState = players.A.video.paused || players.B.video.paused;
+ui.masterPlayPauseBtn.addEventListener('click', () => {
+  const targetState = playerRefs.A.video.paused || playerRefs.B.video.paused;
   if (targetState) {
-    players.A.video.play().catch(() => {});
-    players.B.video.play().catch(() => {});
+    playerRefs.A.video.play().catch(() => {});
+    playerRefs.B.video.play().catch(() => {});
   } else {
-    players.A.video.pause();
-    players.B.video.pause();
+    playerRefs.A.video.pause();
+    playerRefs.B.video.pause();
   }
 });
 
-masterLatencySyncBtn.addEventListener('click', () => {
-  players.B.video.currentTime = players.A.video.currentTime;
+ui.masterLatencySyncBtn.addEventListener('click', () => {
+  playerRefs.B.video.currentTime = playerRefs.A.video.currentTime;
   writeToConsole('Calibration complete. Timeline clocks forced to match Player A position.', 'state');
 });
 
-toggleOverlayBtn.addEventListener('click', () => {
-  isOverlayModeActive = !isOverlayModeActive;
-  if (isOverlayModeActive) {
-    workbenchGrid.classList.add('overlay-active');
-    players.B.video.classList.add('embedded-overlay-player');
-    playerContainerA.appendChild(players.B.video);
-    players.B.video.currentTime = players.A.video.currentTime;
-    players.B.video.controls = false;
-    toggleOverlayBtn.textContent = 'Exit Visual Difference Overlay Mode';
+ui.toggleOverlayBtn.addEventListener('click', () => {
+  state.overlayActive = !state.overlayActive;
+  renderOverlayView();
+
+  if (state.overlayActive) {
+    playerRefs.B.video.currentTime = playerRefs.A.video.currentTime;
+    playerRefs.B.video.controls = false;
     writeToConsole('Visual Difference Layer active. Black frames indicate identical compressed tracking markers.', 'warn');
   } else {
-    workbenchGrid.classList.remove('overlay-active');
-    players.B.video.classList.remove('embedded-overlay-player');
-    document.querySelector('#cellB .player-section').appendChild(players.B.video);
-    players.B.video.controls = true;
-    toggleOverlayBtn.textContent = 'Toggle Visual Matrix Difference Overlay';
+    playerRefs.B.video.controls = true;
   }
 });
 
-globalPresetBtns.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const type = btn.getAttribute('data-target');
+ui.globalPresetBtns.forEach((button) => {
+  button.addEventListener('click', () => {
+    const type = button.getAttribute('data-target');
     if (type === 'both-hls') {
-      players.A.urlInput.value = 'https://mux.dev';
-      players.B.urlInput.value = 'https://mux.dev';
+      setPlayerUrl('A', 'https://mux.dev');
+      setPlayerUrl('B', 'https://mux.dev');
     } else if (type === 'both-mp4') {
-      players.A.urlInput.value = 'https://googleapis.com';
-      players.B.urlInput.value = 'https://googleapis.com';
+      setPlayerUrl('A', 'https://googleapis.com');
+      setPlayerUrl('B', 'https://googleapis.com');
     }
     deployStreamRoute('A');
     deployStreamRoute('B');
@@ -242,9 +303,53 @@ globalPresetBtns.forEach((btn) => {
 });
 
 setInterval(() => {
-  updateChannelTelemetry('A', players.A);
-  updateChannelTelemetry('B', players.B);
+  updateChannelTelemetry('A', {
+    ...state.players.A,
+    video: playerRefs.A.video,
+    statBuffer: playerRefs.A.statBuffer,
+    statDropped: playerRefs.A.statDropped,
+    statFps: playerRefs.A.statFps,
+    lastDecodedFrames: state.players.A.lastDecodedFrames,
+    lastTime: state.players.A.lastTime
+  });
+
+  updateChannelTelemetry('B', {
+    ...state.players.B,
+    video: playerRefs.B.video,
+    statBuffer: playerRefs.B.statBuffer,
+    statDropped: playerRefs.B.statDropped,
+    statFps: playerRefs.B.statFps,
+    lastDecodedFrames: state.players.B.lastDecodedFrames,
+    lastTime: state.players.B.lastTime
+  });
+
+  state.players.A.lastDecodedFrames = state.players.A.lastDecodedFrames;
+  state.players.B.lastDecodedFrames = state.players.B.lastDecodedFrames;
 }, 500);
+
+function syncTelemetryStateFromVideo(key) {
+  const appPlayer = state.players[key];
+  const player = playerRefs[key];
+
+  if (player.video.getVideoPlaybackQuality) {
+    const qualityData = player.video.getVideoPlaybackQuality();
+    appPlayer.lastDecodedFrames = qualityData.totalVideoFrames;
+    appPlayer.lastTime = performance.now();
+  }
+}
+
+window.__streamTestLab = {
+  state,
+  playerRefs,
+  deployStreamRoute,
+  setPlayerUrl,
+  renderOverlayView,
+  syncTelemetryStateFromVideo,
+  isOverlayModeActive: () => state.overlayActive
+};
+
+renderOverlayView();
+writeToConsole('Modular telemetry engine initialization sequence success.', 'system');
 
 deployStreamRoute('A');
 deployStreamRoute('B');
@@ -252,11 +357,3 @@ deployStreamRoute('B');
 initOfflineDatabase().catch((error) => {
   console.error('Offline DB init failed:', error);
 });
-
-window.__streamTestLab = {
-  players,
-  deployStreamRoute,
-  isOverlayModeActive: () => isOverlayModeActive,
-};
-
-writeToConsole('Modular telemetry engine initialization sequence success.', 'system');
