@@ -290,6 +290,7 @@ ui.toggleOverlayBtn.addEventListener('click', () => {
 ui.globalPresetBtns.forEach((button) => {
   button.addEventListener('click', () => {
     const type = button.getAttribute('data-target');
+
     if (type === 'both-hls') {
       setPlayerUrl('A', 'https://mux.dev');
       setPlayerUrl('B', 'https://mux.dev');
@@ -297,6 +298,7 @@ ui.globalPresetBtns.forEach((button) => {
       setPlayerUrl('A', 'https://googleapis.com');
       setPlayerUrl('B', 'https://googleapis.com');
     }
+
     deployStreamRoute('A');
     deployStreamRoute('B');
   });
